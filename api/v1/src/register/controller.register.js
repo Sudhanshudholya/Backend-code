@@ -1,10 +1,10 @@
 const registerService = require("./service.register");
+const registerController = {};
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const registerController = {};
 
-registerController.add = async (req, res) => {
+registerController.create = async (req, res) => {
   try {
     const { name, email, mobile, password, confirmPassword } = req.body;
 
@@ -15,6 +15,7 @@ registerController.add = async (req, res) => {
         data: null,
       });
     }
+
     if (password !== confirmPassword) {
       return res.send({
         status: false,
@@ -24,6 +25,7 @@ registerController.add = async (req, res) => {
     }
 
     const registeredEmail = await registerService.findEmail(email);
+
     if (registeredEmail) {
       return res.send({
         status: false,
@@ -42,7 +44,8 @@ registerController.add = async (req, res) => {
       });
     }
 
-    const register = await registerService.add(name, email, mobile, password);
+    const register = await registerService.create(name, email, mobile, password);
+
     if (!register) {
       return res.send({
         status: false,
@@ -56,10 +59,10 @@ registerController.add = async (req, res) => {
       data: register,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.send({
       status: false,
-      message: "something went wrong to add register",
+      message: "something went wrong to create register",
       error,
     });
   }
@@ -68,14 +71,17 @@ registerController.add = async (req, res) => {
 registerController.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
       return res.send({
         status: false,
-        message: "All field are required",
+        message: "All fields are required",
         data: null,
       });
     }
+
     const registeredEmail = await registerService.findEmail(email);
+
     if (!registeredEmail) {
       return res.send({
         status: false,
@@ -83,10 +89,12 @@ registerController.login = async (req, res) => {
         data: null,
       });
     }
+
     const matchUserPassword = bcrypt.compareSync(
       password,
       registeredEmail.password
     );
+
     if (!matchUserPassword) {
       return res.send({
         status: false,
@@ -94,7 +102,8 @@ registerController.login = async (req, res) => {
         data: null,
       });
     }
-    const token = jwt.sign(
+
+    var token = jwt.sign(
       { _id: registeredEmail._id },
       process.env.SECRET_TOKEN
     );
@@ -118,16 +127,22 @@ registerController.findSingleUser = async (req, res) => {
   try {
     const { id } = req.params;
     if (id) {
-      const user = await registerService.findSingleUser(id);
-      if (!user) {
+      const singleUser = await registerService.findSingleUser(id);
+      if (!singleUser) {
         return res.send({
           status: false,
-          message: "user not found",
+          message: "single user not found",
           data: null,
         });
       }
-      return res.send({ status: true, message: "user found", data: user });
+
+      return res.send({
+        status: true,
+        message: "single user found successfully",
+        data: singleUser,
+      });
     }
+
   } catch (error) {
     console.log(error);
     return res.send({
@@ -140,12 +155,12 @@ registerController.findSingleUser = async (req, res) => {
 
 registerController.findAllUsers = async (req, res) => {
   try {
-    const users = await registerService.findAllUsers();
-    if (users) {
+    const allUsers = await registerService.findAllUsers();
+    if (allUsers) {
       return res.send({
         status: true,
         message: "all users found",
-        data: users,
+        data: allUsers,
       });
     }
   } catch (error) {
@@ -162,12 +177,10 @@ registerController.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, mobile } = req.body;
+
     if (id && name && email && mobile) {
-      const userUpdate = await registerService.updateUser(id, 
-        name,
-        email,
-        mobile,
-      );
+      const userUpdate = await registerService.updateUser(id, name, email, mobile)
+       
       if (userUpdate) {
         return res.send({
           status: true,

@@ -15,13 +15,11 @@ const authenticateToken = (req, res, next) => {
     req._id = decoded._id;
     next();
   } catch (error) {
-    console.log(error);
-    return res.send({
+    return res.status(401).send({
       status: false,
       message: "unauthorized access",
     });
   }
 };
 
-
-module.exports = authenticateToken
+module.exports = authenticateToken;
